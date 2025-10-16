@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Permitaluma – Permissions</title>
+  <link rel="stylesheet" href="./assets/style.css"/>
+</head>
+<body>
+<div class="wrap">
+  <h1>Permissions by Zone</h1>
+  <div class="card">
+    <div id="useInfo"></div>
+    <table>
+      <thead><tr><th>Zoning District</th><th>Permission</th><th>Next</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="note small">Click <em>Select</em> for CUP or S to proceed to overlays.</div>
+  </div>
+  <div class="card no-print">
+    <a class="btn" href="./index.html">Back</a>
+  </div>
+</div>
+
+<script type="module">
+import { qp } from './assets/utils.js';
+import { ZONING_PERMISSIONS } from './zoningData.js';
+
+const use = qp('use') || '(unknown use)';
+document.getElementById('useInfo').innerHTML = `<strong>Selected use:</strong> ${use}`;
+
+const map = ZONING_PERMISSIONS[use] || {};
+const tbody = document.getElementById('rows');
+tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
+  const badge = `<span class="badge ${perm.replace(/\s+/g,'_')}">${perm}</span>`;
+  const next = (perm === 'CUP' || perm === 'S')
+    ? `<a class="btn" href="overlay.html?use=${encodeURIComponent(use)}&zone=${encodeURIComponent(zone)}&perm=${perm}">Select</a>`
+    : '';
+  return `<tr>
+    <td>${zone}</td>
+    <td>${badge}</td>
+    <td>${next}</td>
+  </tr>`;
+}).join('');
+</script>
+</body>
+</html>
