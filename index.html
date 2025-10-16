@@ -519,6 +519,22 @@ ul.innerHTML = USES.map(u =>
   `<li><a class="btn" href="permission.html?use=${encodeURIComponent(u)}">${u}</a></li>`
 ).join('');
 </script>
+<!-- ✳️ Make the land uses clickable -->
+<script>
+const USES = [
+  "Bar/Tavern/Night Club",
+  "Restaurant",
+  "Office",
+  "Retail",
+  "Light Industrial"
+];
+
+// Render clickable list
+const ul = document.getElementById("useList");
+ul.innerHTML = USES.map(
+  u => `<li><a href="permission.html?use=${encodeURIComponent(u)}">${u}</a></li>`
+).join("");
+</script>
 
 </body>
 </html>
