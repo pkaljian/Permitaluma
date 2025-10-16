@@ -57,6 +57,15 @@ tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
   return `<tr><td>${zone}</td><td>${perm}</td><td>${next}</td></tr>`;
 }).join('');
 </script>
+<h2 id="debug" style="background:#ffefc7;padding:8px;border:1px solid #e2c46b;border-radius:6px;">
+  JS not running yet…
+</h2>
+
+<script>
+  // This should flip the banner text immediately if JS is running.
+  document.getElementById('debug').textContent = '✅ JS is running on permission.html';
+</script>
+
 </body>
 
 </html>
