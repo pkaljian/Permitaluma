@@ -152,4 +152,20 @@ document.getElementById('generateBtn').addEventListener('click', () => {
 });
 </script>
 </body>
+  <script type="module">
+import { qp } from './assets/utils.js';
+const use = qp('use');
+const zone = qp('zone');
+const perm = qp('perm');
+document.getElementById('summary').innerHTML = `${use} in ${zone} (${perm})`;
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const overlays = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(i => i.value);
+  const checklist = overlays.includes('Historic')
+    ? ['Historic SPAR Checklist', 'CUP Application', 'Building Permit']
+    : ['CUP Application', 'Building Permit'];
+  document.getElementById('checklist').innerHTML = checklist.map(i => `<li>${i}</li>`).join('');
+});
+</script>
+
 </html>
