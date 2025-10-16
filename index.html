@@ -1,169 +1,517 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Permitaluma — Petaluma Permit Pathway (Pilot)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root { --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --sub:#475569; --brand:#2563eb; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink); }
-    header { padding:16px 20px; background:#fff; box-shadow:0 1px 0 rgba(0,0,0,.06); position:sticky; top:0; z-index:10; }
-    header h1 { margin:0; font-size:20px; }
-    main { max-width:1000px; margin:24px auto; padding:0 16px 64px; }
-    .grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
-    .card { background:var(--card); border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
-    h2 { margin:0 0 8px 0; font-size:18px; }
-    h3 { margin:16px 0 8px; font-size:16px; }
-    label { display:block; margin:6px 0; color:var(--sub); }
-    .row { display:flex; gap:10px; flex-wrap:wrap; margin:6px 0; }
-    .pill { padding:6px 10px; border:1px solid #cbd5e1; border-radius:999px; cursor:pointer; user-select:none; }
-    .pill input { margin-right:6px; }
-    button { background:var(--brand); color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; }
-    button.secondary { background:#0f172a; }
-    ul { margin:6px 0 0 20px; }
-    .info { color:var(--sub); font-size:13px; }
-    .muted { color:#64748b; }
-    .tag { font-size:12px; background:#eef2ff; border:1px solid #c7d2fe; padding:2px 6px; border-radius:999px; }
-    .timeline { margin-top:6px; height:10px; background:#e2e8f0; border-radius:999px; position:relative; overflow:hidden; }
-    .timeline .bar { position:absolute; left:0; top:0; bottom:0; background:#60a5fa; }
-    .no-print { margin-top:12px; display:flex; gap:8px; }
-    @media print {
-      @page { margin:0.5in; }
-      header, .no-print { display:none !important; }
-      .card { break-inside: avoid; }
-      a::after { content: " (" attr(href) ")"; font-size: 0.8em; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoning Lookup Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        } 
+ 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .query-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3498db;
+        }
+
+        .query-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .query-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .query-text {
+            font-size: 1.1em;
+            color: #34495e;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .results {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid #ecf0f1;
+            min-height: 100px;
+        }
+
+        .results h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-item {
+            background: #f1f2f6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .result-item.conditional {
+            border-left-color: #f39c12;
+        }
+
+        .result-item.not-permitted {
+            border-left-color: #e74c3c;
+        }
+
+        .result-item.accessory {
+            border-left-color: #9b59b6;
+        }
+
+        .zone-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .permission-detail {
+            margin-top: 5px;
+            color: #555;
+            font-size: 0.95em;
+        }
+.results .section-header {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.results .section-header.permitted   { background: #eaf7ee; color: #1e7e34; }  /* green */
+.results .section-header.conditional { background: #fff3e0; color: #b05600; }  /* orange */
+.results .section-header.accessory   { background: #f3e9fb; color: #6f42c1; }  /* purple */
+
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #e74c3c;
+            font-style: italic;
+        }
+
+           .definition-banner {
+  background: #fffbe7;
+  border: 1px solid #ffd75a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .query-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            select {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+<script src="ZoningData_not_permitted.js"></script>
+      <script src="UseDefinitions.js"></script>
+  
 </head>
 <body>
-  <header><h1>Permitaluma — Petaluma Permit Pathway (Pilot)</h1></header>
-  <main>
-    <div class="grid">
-      <!-- INPUTS -->
-      <div class="card">
-  <h3>Project Information</h3>
-  <label>Project Name / Description
-    <input id="projName" type="text" placeholder="e.g., ADU addition at rear of lot" style="width:100%">
-  </label>
-  <label>Parcel Number (APN)
-    <input id="projAPN" type="text" placeholder="e.g., 008-123-045" style="width:100%">
-  </label>
-  <label>Address / Location
-    <input id="projAddr" type="text" placeholder="e.g., 123 Main Street, Petaluma" style="width:100%">
-  </label>
+    <div class="container">
+        <h1>Zoning Lookup Tool</h1>
+        <p class="subtitle">Find zoning permissions for land uses quickly and easily</p>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin-bottom: 30px; border-left: 5px solid #fdcb6e;">
+            <strong>⚠️ Important Disclaimer:</strong> This tool provides general zoning information for reference purposes only. Always verify requirements with the Planning Department before making final development decisions. Zoning regulations may have additional requirements, recent updates, or site-specific considerations not reflected in this tool.
+            <br><br>
+            <strong>📋 Additional Resources:</strong>
+            <a href="https://cityofpetaluma.org/zoning-map/" target="_blank" style="color: #2980b9; text-decoration: none;">View Official Zoning Map</a> | 
+            <a href="https://petaluma.municipal.codes/SmartCode/2" target="_blank" style="color: #2980b9; text-decoration: none;">View Smart Code and Zoning Code</a>
+        </div>
+
+        <div class="query-section">
+            <div class="query-title">Where can I put a specific use?</div>
+            <div class="query-form">
+                <span class="query-text">Where can I put a</span>
+                <select id="landUseSelect">
+                    <option value="">Select a land use...</option>
+                </select>
+                <span class="query-text">?</span>
+               
+            </div>
+        </div>
+<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px; margin-top: 15px; font-size: 0.9em; color: #6c757d;">
+    Need help understanding a land use? <a href="https://petaluma.municipal.codes/ZoningOrds/28" target="_blank" style="color: #2980b9; text-decoration: none;">Find land use definitions here</a>
 </div>
-
-      <section class="card">
-        <h2>1) Choose Permission Type & Overlays</h2>
-        <label>
-          Permission type (from zoning/use):
-          <select id="permType">
-            <option value="P">P — Permitted (ministerial)</option>
-            <option value="A">A — Accessory</option>
-            <option value="S">S — SPAR (Design Review)</option>
-            <option value="CUP">CUP — Conditional Use Permit</option>
-          </select>
-        </label>
-
-        <h3>Overlays</h3>
-        <div class="row" id="overlayRow">
-          <!-- Pills rendered by JS -->
+<div style="text-align: center; font-size: 1.2em; color: #7f8c8d; margin: 20px 0;">
+    — OR —
+</div>
+        <div class="query-section">
+            <div class="query-title">What's allowed in a specific zone?</div>
+            <div class="query-form">
+                <span class="query-text">What's allowed in</span>
+                <select id="zoneSelect">
+                    <option value="">Select a zone...</option>
+                </select>
+                <span class="query-text">zoning?</span>
+               
+            </div>
         </div>
-
-        <p class="info">Tip: until GIS is wired, just toggle overlays here to see how steps change.</p>
-      </section>
-
-      <section class="card">
-        <h2>2) Select Building Scope (optional)</h2>
-        <div class="row" id="scopeRow"><!-- Scopes rendered by JS --></div>
-        <p class="info">We’ll recommend a few official City handouts based on scope.</p>
-      </section>
-
-      <!-- OUTPUT: PATHWAY -->
-      <section class="card" id="pathwayCard">
-        <h2>Permit Pathway</h2>
-        <ul id="stepsList"></ul>
-        <div class="timeline" title="Illustrative duration only">
-          <div class="bar" id="timeBar" style="width:60%"></div>
+<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px; margin-top: 15px; font-size: 0.9em; color: #6c757d;">
+    Properties in PUD/PCD zones may have additional requirements. <a href="https://cityofpetaluma.org/pud-and-pcd-guidelines/" target="_blank" style="color: #2980b9; text-decoration: none;">Check specific plan guidelines</a>
+</div>
+        <div class="results" id="results">
+            <p class="loading">Select a query above to get started</p>
         </div>
-        <p class="info">“Appeal Window” appears as informational (no applicant action).</p>
-      </section>
-
-      <!-- OUTPUT: HANDOUTS -->
-      <section class="card">
-        <h2>Recommended Building Handouts</h2>
-        <ul id="handoutList"></ul>
-        <p class="info">Links go to the City’s official site.</p>
-      </section>
-
-      <!-- OUTPUT: ONE-PAGERS -->
-      <section class="card">
-        <h2>Attached One-Pager Checklists</h2>
-        <ul id="onePagers"></ul>
-        <p class="info">These are concise PDFs you can embed/print.</p>
-      </section>
     </div>
+<!-- REMOVE this line entirely:
+<script src="zoningData.js"></script>
+-->
 
-    <div class="no-print">
-      <button id="buildBtn">Build Pathway</button>
-      <button class="secondary" onclick="window.print()">Export as PDF</button>
-    </div>
-  </main>
+<script>
+  // === Helpers ===
+function getDefinition(useName) {
+  const dict = window.useDefinitions || {};
+  if (!useName) return "";
 
-  <script>
-  // ---------------------------
-  // Inline config (simple!)
-  // ---------------------------
-  const PATHWAY_ROUTES = {
-    "P":   ["Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
-    "A":   ["Accessory_Standards_Check","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
-    "S":   ["SPAR_PreApp_Optional","SPAR_App","SPAR_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
-    "CUP": ["PreApp_Optional","CUP_App","CUP_Hearing_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"]
-  };
+  // exact match first
+  if (dict[useName]) return dict[useName];
 
-  const STEP_LIBRARY = {
-    "PreApp_Optional": { label:"Pre-Application Meeting (optional)", dept:"Planning" },
-    "CUP_App": { label:"Conditional Use Permit (CUP) Application", dept:"Planning" },
-    "CUP_Hearing_Decision": { label:"CUP Hearing & Decision", dept:"Planning Commission" },
-    "SPAR_PreApp_Optional": { label:"SPAR Pre-App (optional)", dept:"Planning/DR" },
-    "SPAR_App": { label:"Site Plan & Architectural Review (SPAR) Application", dept:"Planning/DR" },
-    "SPAR_Decision": { label:"Design Review Decision", dept:"Staff/DR Board" },
-    "Appeal_Window": { label:"Appeal Window (no applicant action)", dept:"Planning", actionRequired:false, display:"informational" },
-    "Accessory_Standards_Check": { label:"Accessory Standards Check (e.g., ADU)", dept:"Planning" },
-    "Flood_Elevation_Certificate": { label:"Flood Elevation Certificate", dept:"Public Works/Surveyor" },
-    "Drainage_Stormwater_Memo": { label:"Drainage & Stormwater Memo", dept:"Civil/Stormwater" },
-    "SPA_Design_Compliance_Matrix": { label:"Central Petaluma SPA Design Compliance Matrix", dept:"Planning/DR" },
-    "Hillside_Grading_Permit": { label:"Hillside/Grading Permit", dept:"Public Works" },
-    "Building_Permit_App": { label:"Building Permit Application", dept:"Building" },
-    "Plan_Check": { label:"Plan Check", dept:"Building" },
-    "Revisions_If_Any": { label:"Plan Check Revisions (if any)", dept:"Applicant/Design Team" },
-    "Inspections": { label:"Inspections", dept:"Building" },
-    "COO": { label:"Certificate of Occupancy (COO)", dept:"Building" }
-  };
+  // normalize the key
+  const normalize = s => String(s)
+    .toLowerCase()
+    .replace(/\band\b/g, '&')
+    .replace(/&/g, 'and')
+    .replace(/[\/,–—\-]/g, ' ')     // unify separators
+    .replace(/\s+/g, ' ')           // collapse spaces
+    .trim();
 
-  const OVERLAY_INJECTORS = [
-    {
-      id:"Historic", matchAny:["Historic"],
-      ensureSteps:[ {id:"SPAR_App", after:"CUP_App"}, {id:"SPAR_App", after:"PreApp_Optional"} ],
-      notes:"Historic context typically requires SPAR."
-    },
-    {
-      id:"Floodplain", matchAny:["Floodplain","FEMA_SFHA"],
-      insertBefore:[ {target:"Building_Permit_App", steps:["Flood_Elevation_Certificate","Drainage_Stormwater_Memo"]} ],
-      notes:"Floodplain projects need elevation cert and stormwater documentation."
-    },
-    {
-      id:"CentralPetaluma_SPA", matchAny:["CentralPetaluma_SPA"],
-      insertBefore:[ {target:"SPAR_App", steps:["SPA_Design_Compliance_Matrix"]} ],
-      notes:"Central Petaluma SPA design compliance."
-    },
-    {
-      id:"Hillside", matchAny:["Hillside"],
-      insertBefore:[ {target:"Building_Permit_App", steps:["Hillside_Grading_Permit"]} ],
-      notes:"Steep slopes → grading permit."
+  const normKey = normalize(useName);
+
+  // build a normalized index once per session
+  if (!window.__defsIndex) {
+    window.__defsIndex = {};
+    for (const k of Object.keys(dict)) {
+      window.__defsIndex[normalize(k)] = k;
     }
-  ];
+  }
 
-  const SCOPE_TO_HANDOUTS = {
-    "ADU_JADU": [
-      { title:"ADU/JADU
+  // find nearest normalized key
+  const match = window.__defsIndex[normKey];
+  if (match) return dict[match];
+
+  // optional fuzzy fallback: look for partial containment
+  for (const [k, v] of Object.entries(dict)) {
+    const nk = normalize(k);
+    if (nk.includes(normKey) || normKey.includes(nk)) {
+      return v;
+    }
+  }
+
+  return "";
+}
+
+
+  function htmlEscape(s) {
+    return String(s)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  // === Build dropdowns from window.zoningData (single source of truth) ===
+  function populateDropdowns() {
+    const landUseSelect = document.getElementById('landUseSelect');
+    const zoneSelect = document.getElementById('zoneSelect');
+    if (!landUseSelect || !zoneSelect) return;
+
+    const data = (window.zoningData && typeof window.zoningData === 'object') ? window.zoningData : {};
+    const landUses = Object.keys(data).sort();
+    const zones = Array.from(new Set(Object.values(data).flatMap(row => Object.keys(row || {}))))
+      .filter(Boolean)
+      .sort();
+
+    landUseSelect.innerHTML = '<option value="">Select a land use...</option>';
+    zoneSelect.innerHTML = '<option value="">Select a zone...</option>';
+
+    landUses.forEach(use => {
+      const opt = document.createElement('option');
+      opt.value = use;
+      opt.textContent = use;
+      landUseSelect.appendChild(opt);
+    });
+    zones.forEach(zone => {
+      const opt = document.createElement('option');
+      opt.value = zone;
+      opt.textContent = zone;
+      zoneSelect.appendChild(opt);
+    });
+  }
+
+function normalizePermission(permission) {
+  const p = (permission || "").toLowerCase().trim();
+  if (!p || p === "not permitted" || p === "np") return "not-permitted";
+  if (p.startsWith("cup") || p.includes("conditional")) return "conditional";
+  if (p.startsWith("a") || p.includes("accessory")) return "accessory";
+  // fallback
+  if (p === "permitted" || p === "p") return "permitted";
+  return "permitted";
+}
+
+function getPermissionClass(permission) {
+  return normalizePermission(permission);
+}
+
+  // === Search: Land Use ===
+  function searchByLandUse() {
+    const selectedUse = document.getElementById('landUseSelect').value;
+    const results = document.getElementById('results');
+
+    if (!selectedUse) {
+      results.innerHTML = '<p class="no-results">Please select a land use first.</p>';
+      return;
+    }
+
+    const useData = (window.zoningData || {})[selectedUse];
+    if (!useData) {
+      results.innerHTML = `<p class="no-results">No data found for "${htmlEscape(selectedUse)}".</p>`;
+      return;
+    }
+
+    let html = `<h3>Where "${htmlEscape(selectedUse)}" is allowed:</h3>`;
+
+    // Definition banner
+    const def = getDefinition(selectedUse);
+    if (def) {
+      html += `
+        <div class="definition-banner">
+          <strong>Definition:</strong> ${htmlEscape(def)}
+        </div>`;
+    }
+
+    const permitted = [], conditional = [], accessory = [], notPermitted = [];
+    Object.entries(useData).forEach(([zone, permission]) => {
+      const item = { zone, permission };
+const kind = normalizePermission(permission);
+if (kind === "not-permitted") notPermitted.push(item);
+else if (kind === "conditional") conditional.push(item);
+else if (kind === "accessory") accessory.push(item);
+else permitted.push(item);
+
+    });
+
+    if (permitted.length) {
+  html += '<h4 class="section-header permitted">Permitted:</h4>';
+        permitted.forEach(item => {
+        html += `<div class="result-item permitted">
+          <span class="zone-name">${htmlEscape(item.zone)}</span>
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+    if (conditional.length) {
+  html += '<h4 class="section-header conditional">Conditional Use Permit Required:</h4>';
+      conditional.forEach(item => {
+        html += `<div class="result-item conditional">
+          <span class="zone-name">${htmlEscape(item.zone)}</span>
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+    if (accessory.length) {
+  html += '<h4 class="section-header accessory">Accessory Use:</h4>';
+      accessory.forEach(item => {
+        html += `<div class="result-item accessory">
+          <span class="zone-name">${htmlEscape(item.zone)}</span>
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+
+    results.innerHTML = html;
+  }
+
+  // === Search: Zone ===
+  function searchByZone() {
+    const selectedZone = document.getElementById('zoneSelect').value;
+    const results = document.getElementById('results');
+
+    if (!selectedZone) {
+      results.innerHTML = '<p class="no-results">Please select a zone first.</p>';
+      return;
+    }
+
+    let html = `<h3>What's allowed in ${htmlEscape(selectedZone)} zoning:</h3>`;
+    const permitted = [], conditional = [], accessory = [];
+
+    Object.entries(window.zoningData || {}).forEach(([landUse, zones]) => {
+      const permission = zones[selectedZone];
+      const kind = normalizePermission(permission);
+if (kind !== "not-permitted") {
+  const item = { landUse, permission };
+  if (kind === "conditional") conditional.push(item);
+  else if (kind === "accessory") accessory.push(item);
+  else permitted.push(item);
+}
+
+    });
+
+    const landUseSpan = (lu) => {
+      const def = getDefinition(lu);
+      const escLu = htmlEscape(lu);
+      const escDef = htmlEscape(def);
+      return def
+        ? `<span class="zone-name" title="${escDef}" aria-label="${escDef}">${escLu}</span>`
+        : `<span class="zone-name">${escLu}</span>`;
+    };
+
+    if (permitted.length) {
+html += '<h4 class="section-header permitted">Permitted Uses:</h4>';
+      permitted.forEach(item => {
+        html += `<div class="result-item permitted">
+          ${landUseSpan(item.landUse)}
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+    if (conditional.length) {
+html += '<h4 class="section-header conditional">Conditional Use Permit Required:</h4>';
+      conditional.forEach(item => {
+        html += `<div class="result-item conditional">
+          ${landUseSpan(item.landUse)}
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+    if (accessory.length) {
+html += '<h4 class="section-header accessory">Accessory Uses:</h4>';
+      accessory.forEach(item => {
+        html += `<div class="result-item accessory">
+          ${landUseSpan(item.landUse)}
+          <div class="permission-detail">${htmlEscape(item.permission)}</div>
+        </div>`;
+      });
+    }
+
+    if (!permitted.length && !conditional.length && !accessory.length) {
+      html += '<p class="no-results">No uses are specifically allowed in this zone.</p>';
+    }
+
+    results.innerHTML = html;
+  }
+
+  // === Init + (optional) auto-react on change ===
+  document.addEventListener('DOMContentLoaded', function() {
+    populateDropdowns();
+
+    // If you want immediate reaction to dropdown changes:
+    document.getElementById('landUseSelect').addEventListener('change', function () {
+      document.getElementById('zoneSelect').value = '';
+      searchByLandUse();
+    });
+    document.getElementById('zoneSelect').addEventListener('change', function () {
+      document.getElementById('landUseSelect').value = '';
+      searchByZone();
+    });
+  });
+</script>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[Defs] present?', !!window.useDefinitions,
+              'count:', window.useDefinitions ? Object.keys(window.useDefinitions).length : 0);
+
+  // When you change either dropdown, this will show what definition we found
+  const logDef = () => {
+    const lu = document.getElementById('landUseSelect').value;
+    if (!lu) return;
+    console.log('[Defs] selected:', JSON.stringify(lu), '→', JSON.stringify(getDefinition(lu)));
+  };
+  document.getElementById('landUseSelect').addEventListener('change', logDef);
+});
+</script>
+
+</body>
+</html>
