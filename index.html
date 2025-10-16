@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Permitaluma — Petaluma Permit Pathway (Pilot)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --sub:#475569; --brand:#2563eb; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+    header { padding:16px 20px; background:#fff; box-shadow:0 1px 0 rgba(0,0,0,.06); position:sticky; top:0; z-index:10; }
+    header h1 { margin:0; font-size:20px; }
+    main { max-width:1000px; margin:24px auto; padding:0 16px 64px; }
+    .grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+    .card { background:var(--card); border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    h2 { margin:0 0 8px 0; font-size:18px; }
+    h3 { margin:16px 0 8px; font-size:16px; }
+    label { display:block; margin:6px 0; color:var(--sub); }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin:6px 0; }
+    .pill { padding:6px 10px; border:1px solid #cbd5e1; border-radius:999px; cursor:pointer; user-select:none; }
+    .pill input { margin-right:6px; }
+    button { background:var(--brand); color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    button.secondary { background:#0f172a; }
+    ul { margin:6px 0 0 20px; }
+    .info { color:var(--sub); font-size:13px; }
+    .muted { color:#64748b; }
+    .tag { font-size:12px; background:#eef2ff; border:1px solid #c7d2fe; padding:2px 6px; border-radius:999px; }
+    .timeline { margin-top:6px; height:10px; background:#e2e8f0; border-radius:999px; position:relative; overflow:hidden; }
+    .timeline .bar { position:absolute; left:0; top:0; bottom:0; background:#60a5fa; }
+    .no-print { margin-top:12px; display:flex; gap:8px; }
+    @media print {
+      @page { margin:0.5in; }
+      header, .no-print { display:none !important; }
+      .card { break-inside: avoid; }
+      a::after { content: " (" attr(href) ")"; font-size: 0.8em; }
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Permitaluma — Petaluma Permit Pathway (Pilot)</h1></header>
+  <main>
+    <div class="grid">
+      <!-- INPUTS -->
+      <section class="card">
+        <h2>1) Choose Permission Type & Overlays</h2>
+        <label>
+          Permission type (from zoning/use):
+          <select id="permType">
+            <option value="P">P — Permitted (ministerial)</option>
+            <option value="A">A — Accessory</option>
+            <option value="S">S — SPAR (Design Review)</option>
+            <option value="CUP">CUP — Conditional Use Permit</option>
+          </select>
+        </label>
+
+        <h3>Overlays</h3>
+        <div class="row" id="overlayRow">
+          <!-- Pills rendered by JS -->
+        </div>
+
+        <p class="info">Tip: until GIS is wired, just toggle overlays here to see how steps change.</p>
+      </section>
+
+      <section class="card">
+        <h2>2) Select Building Scope (optional)</h2>
+        <div class="row" id="scopeRow"><!-- Scopes rendered by JS --></div>
+        <p class="info">We’ll recommend a few official City handouts based on scope.</p>
+      </section>
+
+      <!-- OUTPUT: PATHWAY -->
+      <section class="card" id="pathwayCard">
+        <h2>Permit Pathway</h2>
+        <ul id="stepsList"></ul>
+        <div class="timeline" title="Illustrative duration only">
+          <div class="bar" id="timeBar" style="width:60%"></div>
+        </div>
+        <p class="info">“Appeal Window” appears as informational (no applicant action).</p>
+      </section>
+
+      <!-- OUTPUT: HANDOUTS -->
+      <section class="card">
+        <h2>Recommended Building Handouts</h2>
+        <ul id="handoutList"></ul>
+        <p class="info">Links go to the City’s official site.</p>
+      </section>
+
+      <!-- OUTPUT: ONE-PAGERS -->
+      <section class="card">
+        <h2>Attached One-Pager Checklists</h2>
+        <ul id="onePagers"></ul>
+        <p class="info">These are concise PDFs you can embed/print.</p>
+      </section>
+    </div>
+
+    <div class="no-print">
+      <button id="buildBtn">Build Pathway</button>
+      <button class="secondary" onclick="window.print()">Export as PDF</button>
+    </div>
+  </main>
+
+  <script>
+  // ---------------------------
+  // Inline config (simple!)
+  // ---------------------------
+  const PATHWAY_ROUTES = {
+    "P":   ["Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+    "A":   ["Accessory_Standards_Check","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+    "S":   ["SPAR_PreApp_Optional","SPAR_App","SPAR_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+    "CUP": ["PreApp_Optional","CUP_App","CUP_Hearing_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"]
+  };
+
+  const STEP_LIBRARY = {
+    "PreApp_Optional": { label:"Pre-Application Meeting (optional)", dept:"Planning" },
+    "CUP_App": { label:"Conditional Use Permit (CUP) Application", dept:"Planning" },
+    "CUP_Hearing_Decision": { label:"CUP Hearing & Decision", dept:"Planning Commission" },
+    "SPAR_PreApp_Optional": { label:"SPAR Pre-App (optional)", dept:"Planning/DR" },
+    "SPAR_App": { label:"Site Plan & Architectural Review (SPAR) Application", dept:"Planning/DR" },
+    "SPAR_Decision": { label:"Design Review Decision", dept:"Staff/DR Board" },
+    "Appeal_Window": { label:"Appeal Window (no applicant action)", dept:"Planning", actionRequired:false, display:"informational" },
+    "Accessory_Standards_Check": { label:"Accessory Standards Check (e.g., ADU)", dept:"Planning" },
+    "Flood_Elevation_Certificate": { label:"Flood Elevation Certificate", dept:"Public Works/Surveyor" },
+    "Drainage_Stormwater_Memo": { label:"Drainage & Stormwater Memo", dept:"Civil/Stormwater" },
+    "SPA_Design_Compliance_Matrix": { label:"Central Petaluma SPA Design Compliance Matrix", dept:"Planning/DR" },
+    "Hillside_Grading_Permit": { label:"Hillside/Grading Permit", dept:"Public Works" },
+    "Building_Permit_App": { label:"Building Permit Application", dept:"Building" },
+    "Plan_Check": { label:"Plan Check", dept:"Building" },
+    "Revisions_If_Any": { label:"Plan Check Revisions (if any)", dept:"Applicant/Design Team" },
+    "Inspections": { label:"Inspections", dept:"Building" },
+    "COO": { label:"Certificate of Occupancy (COO)", dept:"Building" }
+  };
+
+  const OVERLAY_INJECTORS = [
+    {
+      id:"Historic", matchAny:["Historic"],
+      ensureSteps:[ {id:"SPAR_App", after:"CUP_App"}, {id:"SPAR_App", after:"PreApp_Optional"} ],
+      notes:"Historic context typically requires SPAR."
+    },
+    {
+      id:"Floodplain", matchAny:["Floodplain","FEMA_SFHA"],
+      insertBefore:[ {target:"Building_Permit_App", steps:["Flood_Elevation_Certificate","Drainage_Stormwater_Memo"]} ],
+      notes:"Floodplain projects need elevation cert and stormwater documentation."
+    },
+    {
+      id:"CentralPetaluma_SPA", matchAny:["CentralPetaluma_SPA"],
+      insertBefore:[ {target:"SPAR_App", steps:["SPA_Design_Compliance_Matrix"]} ],
+      notes:"Central Petaluma SPA design compliance."
+    },
+    {
+      id:"Hillside", matchAny:["Hillside"],
+      insertBefore:[ {target:"Building_Permit_App", steps:["Hillside_Grading_Permit"]} ],
+      notes:"Steep slopes → grading permit."
+    }
+  ];
+
+  const SCOPE_TO_HANDOUTS = {
+    "ADU_JADU": [
+      { title:"ADU/JADU
