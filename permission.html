@@ -43,7 +43,7 @@ tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
   </tr>`;
 }).join('');
 </script>
-</body>
+  
   <script type="module">
 import { qp } from './assets/utils.js';
 import { ZONING_PERMISSIONS } from './zoningData.js';
@@ -57,5 +57,6 @@ tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
   return `<tr><td>${zone}</td><td>${perm}</td><td>${next}</td></tr>`;
 }).join('');
 </script>
+</body>
 
 </html>
