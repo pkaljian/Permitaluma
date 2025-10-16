@@ -512,6 +512,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('landUseSelect').addEventListener('change', logDef);
 });
 </script>
+<script type="module">
+import { USES } from './UseDefinitions.js';
+const ul = document.getElementById('useList');
+ul.innerHTML = USES.map(u =>
+  `<li><a class="btn" href="permission.html?use=${encodeURIComponent(u)}">${u}</a></li>`
+).join('');
+</script>
 
 </body>
 </html>
