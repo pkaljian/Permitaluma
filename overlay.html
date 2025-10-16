@@ -151,7 +151,7 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   document.getElementById('timeline').innerHTML = buildTimeline(perm).map(i => `<li>${i}</li>`).join('');
 });
 </script>
-</body>
+  
   <script type="module">
 import { qp } from './assets/utils.js';
 const use = qp('use');
@@ -167,5 +167,6 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   document.getElementById('checklist').innerHTML = checklist.map(i => `<li>${i}</li>`).join('');
 });
 </script>
+</body>
 
 </html>
