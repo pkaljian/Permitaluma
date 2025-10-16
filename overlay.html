@@ -167,6 +167,22 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   document.getElementById('checklist').innerHTML = checklist.map(i => `<li>${i}</li>`).join('');
 });
 </script>
+  <!-- ✳️ Display summary and print -->
+<script>
+function qp(name) {
+  return new URL(window.location.href).searchParams.get(name);
+}
+
+const use  = qp("use");
+const zone = qp("zone");
+const perm = qp("perm");
+
+document.getElementById("summary").innerHTML =
+  `<b>${use}</b> in <b>${zone}</b> (${perm})`;
+
+document.getElementById("printBtn").onclick = () => window.print();
+</script>
+
 </body>
 
 </html>
