@@ -44,4 +44,18 @@ tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
 }).join('');
 </script>
 </body>
+  <script type="module">
+import { qp } from './assets/utils.js';
+import { ZONING_PERMISSIONS } from './zoningData.js';
+const use = qp('use');
+const map = ZONING_PERMISSIONS[use] || {};
+const tbody = document.getElementById('rows');
+tbody.innerHTML = Object.entries(map).map(([zone, perm]) => {
+  const next = (perm === 'CUP' || perm === 'S')
+    ? `<a class="btn" href="overlay.html?use=${encodeURIComponent(use)}&zone=${encodeURIComponent(zone)}&perm=${perm}">Select</a>`
+    : '';
+  return `<tr><td>${zone}</td><td>${perm}</td><td>${next}</td></tr>`;
+}).join('');
+</script>
+
 </html>
