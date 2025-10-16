@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Permitaluma – Overlays & Checklist</title>
+  <link rel="stylesheet" href="./assets/style.css"/>
+</head>
+<body>
+<div class="wrap">
+  <h1>Overlays & Checklist</h1>
+  <div class="card" id="summary"></div>
+
+  <div class="card">
+    <h2>Overlay Zones</h2>
+    <div id="overlays"></div>
+    <div style="margin-top:10px" class="controls">
+      <button class="btn no-print" id="generateBtn">Generate Checklist & Timeline</button>
+      <button class="btn no-print" onclick="window.print()">Print / Save PDF</button>
+      <a class="btn no-print" href="./permission.html">Back</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Application Checklist</h2>
+    <ul id="checklist"></ul>
+  </div>
+
+  <div class="card">
+    <h2>PSA-style Timeline</h2>
+    <ul id="timeline"></ul>
+    <div class="note small">“Appeal Window” is informational (no applicant action).</div>
+  </div>
+</div>
+
+<script type="module">
+import { qp } from './assets/utils.js';
+
+const use = qp('use') || '(unknown use)';
+const zone = qp('zone') || '(unknown zone)';
+const perm = qp('perm') || 'CUP';
+
+document.getElementById('summary').innerHTML = `<strong>Use:</strong> ${use}<br><strong>Zone:</strong> ${zone}<br><strong>Permission:</strong> ${perm}`;
+
+// overlays
+const overlayOptions = ["Historic", "Floodplain", "CentralPetaluma_SPA"];
+document.getElementById('overlays').innerHTML = overlayOptions.map(o =>
+  `<label style="display:block"><input type="checkbox" value="${o}"> ${o.replaceAll('_',' ')}</label>`
+).join('');
+
+// checklist by step (starter set)
+const CHECKLIST_BY_STEP = {
+  "CUP_App": [
+    "CUP application form",
+    "Project description & operations plan",
+    "Site plan, elevations, floor plans",
+    "Public noticing materials"
+  ],
+  "SPAR_App": [
+    "SPAR application form",
+    "Color elevations & materials board",
+    "Context photos"
+  ],
+  "Flood_Elevation_Certificate": ["Elevation certificate by licensed surveyor"],
+  "Drainage_Stormwater_Memo": ["Drainage & stormwater memo by civil"],
+  "Building_Permit_App": [
+    "Building permit application",
+    "Full plan set (architectural/structural)",
+    "Energy/CALGreen compliance forms"
+  ]
+};
+
+// pathway routes
+const PATHWAY_ROUTES = {
+  "P": ["Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+  "A": ["Accessory_Standards_Check","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+  "S": ["SPAR_PreApp_Optional","SPAR_App","SPAR_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"],
+  "CUP": ["PreApp_Optional","CUP_App","CUP_Hearing_Decision","Appeal_Window","Building_Permit_App","Plan_Check","Revisions_If_Any","Inspections","COO"]
+};
+
+const OVERLAY_INJECTORS = [
+  { "matchAny": ["Historic"], "ensureSteps": [
+      { "id": "SPAR_App", "after": "CUP_App" },
+      { "id": "SPAR_App", "after": "PreApp_Optional" }
+  ]},
+  { "matchAny": ["Floodplain","FEMA_SFHA"], "insertBefore": [
+      { "target": "Building_Permit_App", "steps": ["Flood_Elevation_Certificate", "Drainage_Stormwater_Memo"] }
+  ]},
+  { "matchAny": ["CentralPetaluma_SPA"], "insertBefore": [
+      { "target": "SPAR_App", "steps": ["SPA_Design_Compliance_Matrix"] }
+  ]}
+];
+
+const PSA = {
+  "CUP": { planning: [45, 90] },
+  "S": { planning: [30, 60] },
+  "P": { planning: [0, 14] },
+  "A": { planning: [0, 14] },
+  "Building": { initial: [14, 28], resubmittal: [7, 14] }
+};
+
+function composePathway(permissionType, overlays) {
+  let steps = [...(PATHWAY_ROUTES[permissionType] || [])];
+  const has = (arr, tokens) => tokens.some(t => arr.includes(t));
+  const insertBefore = (arr, target, toInsert) => {
+    const i = arr.indexOf(target);
+    return i >= 0 ? [...arr.slice(0, i), ...toInsert, ...arr.slice(i)] : [...arr, ...toInsert];
+  };
+  const ensureAfter = (arr, after, id) => {
+    if (arr.includes(id)) return arr;
+    const i = arr.indexOf(after);
+    if (i >= 0) return [...arr.slice(0, i + 1), id, ...arr.slice(i + 1)];
+    return [...arr, id];
+  };
+  for (const inj of OVERLAY_INJECTORS) {
+    if (!has(overlays, inj.matchAny)) continue;
+    if (inj.insertBefore) for (const rule of inj.insertBefore) steps = insertBefore(steps, rule.target, rule.steps);
+    if (inj.ensureSteps)   for (const rule of inj.ensureSteps) steps = ensureAfter(steps, rule.after, rule.id);
+  }
+  const seen = new Set();
+  return steps.filter(s => (seen.has(s) ? false : (seen.add(s), true)));
+}
+
+function buildChecklist(steps) {
+  const items = [];
+  for (const step of steps) {
+    if (step === 'Appeal_Window') continue;
+    if (CHECKLIST_BY_STEP[step]) items.push(...CHECKLIST_BY_STEP[step]);
+  }
+  const seen = new Set();
+  return items.filter(i => (seen.has(i) ? false : (seen.add(i), true)));
+}
+
+function buildTimeline(perm) {
+  const lines = [];
+  const p = PSA[perm] || { planning: [0, 0] };
+  const [pmin, pmax] = p.planning || [0, 0];
+  if (pmax > 0) lines.push(`Planning review: ~${pmin}-${pmax} days`);
+  lines.push(`Appeal window: informational`);
+  const [bmin, bmax] = PSA.Building.initial;
+  lines.push(`Building plan check (initial): ~${bmin}-${bmax} days`);
+  const [rmin, rmax] = PSA.Building.resubmittal;
+  lines.push(`Revisions (if any): ~${rmin}-${rmax} days`);
+  return lines;
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const overlays = Array.from(document.querySelectorAll('#overlays input:checked')).map(i => i.value);
+  const steps = composePathway(perm, overlays);
+  document.getElementById('checklist').innerHTML = buildChecklist(steps).map(i => `<li>${i}</li>`).join('');
+  document.getElementById('timeline').innerHTML = buildTimeline(perm).map(i => `<li>${i}</li>`).join('');
+});
+</script>
+</body>
+</html>
