@@ -1,0 +1,8 @@
+@media print {
+  @page { margin: 0.5in; }
+  header, nav, .no-print { display: none !important; }
+  .card { break-inside: avoid; }
+  h1, h2, h3 { margin: 0.3rem 0; }
+  ul { margin: 0.2rem 1rem; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.8em; }
+}
